@@ -1,0 +1,8 @@
+file_to_disk = './tmp/extra_disk.vdi'
+Vagrant.configure(2) do |config|
+  config.vm.box = "bento/centos-8"
+    config.vm.provider "virtualbox" do | v |
+        v.customize ['createhd', '--filename', file_to_disk, '--size', 10 * 1024]
+        v.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+    end
+end

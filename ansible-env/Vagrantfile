@@ -1,0 +1,70 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "1024"]
+    vb.customize ["modifyvm", :id, "--cpus", "1"]
+  end
+
+  config.vm.define "ansible" do |ansible|
+    ansible.vm.box = "bento/centos-8"
+    ansible.vm.network "private_network", ip: "192.168.1.201"
+    ansible.vm.hostname = "ansible"
+    ansible.vm.provider :virtualbox do |vb|
+    ansible.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa", destination: "~/id_rsa"
+    ansible.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa.pub", destination: "~/id_rsa.pub"
+    ansible.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa.pub", destination: "~/authorized_keys"
+    ansible.vm.provision "shell", inline: <<-SHELL
+      echo "192.168.1.202 ansible1" | sudo tee -a /etc/hosts
+      echo "192.168.1.203 ansible2" | sudo tee -a /etc/hosts
+      sudo dnf -y update
+      sudo dnf -y install python3
+      pip3 install ansible
+      echo alias ansible="/root/.local/bin/ansible" | sudo tee -a /root/.bash_profile
+      sudo mkdir /root/.ssh
+      sudo cp ~vagrant/id_rsa ~vagrant/id_rsa.pub ~vagrant/authorized_keys /root/.ssh
+      sudo chown -R root:root /root/.ssh
+      sudo chmod -R 600 /root/.ssh
+      sudo rm ~vagrant/id_rsa ~vagrant/id_rsa.pub ~vagrant/authorized_keys 
+      SHELL
+  end
+
+  config.vm.define "ansible1" do |ansible1|
+    ansible1.vm.box = "bento/centos-8"
+    ansible1.vm.network "private_network", ip: "192.168.1.202"
+    ansible1.vm.hostname = "ansible1"
+    ansible1.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa", destination: "~/id_rsa"
+    ansible1.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa.pub", destination: "~/id_rsa.pub"
+    ansible1.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa.pub", destination: "~/authorized_keys"
+    ansible1.vm.provision "shell", inline: <<-SHELL
+        echo "192.168.1.201 ansible" | sudo tee -a /etc/hosts
+        sudo mkdir /root/.ssh
+        sudo cp ~vagrant/id_rsa ~vagrant/id_rsa.pub ~vagrant/authorized_keys /root/.ssh
+        sudo chown -R root:root /root/.ssh
+        sudo chmod -R 600 /root/.ssh
+        sudo rm ~vagrant/id_rsa ~vagrant/id_rsa.pub ~vagrant/authorized_keys 
+        SHELL
+  end
+
+  config.vm.define "ansible2" do |ansible2|
+    ansible2.vm.box = "bento/centos-8"
+    ansible2.vm.network "private_network", ip: "192.168.1.203"
+    ansible2.vm.hostname = "ansible2"
+    ansible2.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa", destination: "~/id_rsa"
+    ansible2.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa.pub", destination: "~/id_rsa.pub"
+    ansible2.vm.provision "file", source: "~/.ssh/vagrant-root-keys/id_rsa.pub", destination: "~/authorized_keys"
+    ansible2.vm.provision "shell", inline: <<-SHELL
+        echo "192.168.1.201 ansible" | sudo tee -a /etc/hosts
+        sudo mkdir /root/.ssh
+        sudo cp ~vagrant/id_rsa ~vagrant/id_rsa.pub ~vagrant/authorized_keys /root/.ssh
+        sudo chown -R root:root /root/.ssh
+        sudo chmod -R 600 /root/.ssh
+        sudo rm ~vagrant/id_rsa ~vagrant/id_rsa.pub ~vagrant/authorized_keys 
+        SHELL
+    end
+
+  #config.proxy.http     = "http://192.168.1.1:8080"
+  #config.proxy.https    = "http://192.168.1.1:8080"
+  #config.proxy.no_proxy = "localhost,127.0.0.1"
+  end
+
+end
